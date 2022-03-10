@@ -1,16 +1,15 @@
 
-# Samuel Lajoie, Maxime Gazzé, Miguel Boka et Edgar Pereda Puig
+# Samuel Lajoie et Maxime Gazzé
 # remplacer le fichier eng.traineddata par https://github.com/tesseract-ocr/tessdata/blob/main/eng.traineddata
 # le ficher ce trouve dans le même folder que tessdata (emplacement relatif à l'ordinateur)
-import imutils, cv2, os, requests, sys, env, cadrant, photo, time
+import imutils, cv2, os, requests, sys, env, photo, time, inspect
 import numpy as np
 import matplotlib.pyplot as plt
 from IPython.display import display, clear_output
-from Plaque import getPlateNumber  #quand vous faites 3.c enlever le commentaire
+from plaque import getPlateNumber  #quand vous faites 3.c enlever le commentaire
 from pymongo import MongoClient
 from gpiozero import Button, Buzzer
-sys.path.insert(0, '../iteration_1')
-from iteration1 import command
+from functionsMongo import command
 from datetime import date
 
 def iterationCode():
@@ -83,7 +82,7 @@ def iterationCode():
         cropped =   erode(dilate(thresholding(remove_noise(cropped))))
         cv2.imwrite('cropped.jpg', cropped)
         #Obtiens la matricule et interroge la bd pour vérifier l'existance de l'employé
-        matricule = str(getPlateNumber(cropped))
+        matricule = str(getPlateNumber(cropped)) 
         employe = collection_employees.find_one({"immatriculation": matricule})
 
         #Renvoie la matricule, le nom complet et l'accès au stationnement d'un employé
@@ -94,23 +93,11 @@ def iterationCode():
         else:
             print('matricule n\'appartient pas a un employé')
 
-        # la key doit être retourner avec un fichier que vous devez appelez env.py tel quel:
-        #def getKey():
-        #    return "Mettre_votre_clée_ici"
-
-        #Event avec le bouton choisis
-        event_name1 = "send_email"
-        key = env.getKey()
-        ifttt_hook1 = f"https://maker.ifttt.com/trigger/{event_name1}/with/key/{key}"
-        bouton = Button(21)
-        buzzer = Buzzer(4)
-
         command.visite(matricule)
 
         #Recyclage de l'iteration1 pour obtenir le nombre de visite de la journee
         today = date.today().strftime("%Y-%m-%d")
         nbVisites = str(command.nbVisites("day", today))
-
         #Permet d'obtenir les digits en string avec a chaque fois un nombre de 4 charactere
         digits = ""
         for digitZero in range(4 - len(nbVisites)):
@@ -119,8 +106,6 @@ def iterationCode():
         for digit in range(len(nbVisites)):
             digits += str(nbVisites[digit])
 
-        #envoie un texto et affiche le nombre de visite de la journee
-        requests.post(ifttt_hook2)
         return digits
     except:
         return None
