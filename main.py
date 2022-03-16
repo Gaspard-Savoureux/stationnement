@@ -20,21 +20,19 @@ stationnement = False
 def activateLight(value):
     global stationnement
     stationnement = True
-
+    my_iot.update(projectId, {'/documents/ouvert': True})
 
 @my_iot.on_recv(action_id=20)
 def activateLight(value):
     global stationnement
     stationnement = False
-
+    my_iot.update(projectId, {'/documents/ouvert': False})
 
 @my_iot.main_loop()
 def main():
     try:
         global stationnement
-        # Tester le get field
-        #stationnement = my_iot.get_field(projectId, '/documents/ouvert')
-        #print(stationnement)
+        stationnement = my_iot.get_field(projectId, '/document/ouvert')
         while True:
             while stationnement == True:
                 visites = iterationCode()
