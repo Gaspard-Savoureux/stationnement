@@ -2,6 +2,7 @@
 import os, sys, inspect, time, motor
 import RPi.GPIO as GPIO
 from time import sleep
+import I2C_LCD_driver as LCD
 
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 # parentdir = os.path.dirname(currentdir)
@@ -28,24 +29,24 @@ def activateLight(value):
     stationnement = False
     my_iot.update(projectId, {'/documents/ouvert': False})
 
+
 @my_iot.main_loop()
 def main():
     try:
         global stationnement
-        stationnement = my_iot.get_field(projectId, '/document/ouvert')
+        stationnement = my_iot.get_field(projectId, {'/document/ouvert'})
         while True:
             while stationnement == True:
-                visites = iterationCode()
+
+                lcd = LCD.lcd()
+                visites = iterationCode(my_iot, projectId, lcd)
 
                 if visites == None:
                     break
-                visites = str(visites)
-                compteur = 0
-                while compteur < 200:
-                    compteur += 1
 
                 my_iot.update(projectId, {'/documents/visites/nombre': int(visites[2:])})
                 motor.tourner()
+                sleep(0.5)
 
     except KeyboardInterrupt:
         print('interrupted!')

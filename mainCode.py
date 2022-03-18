@@ -3,23 +3,18 @@
 # remplacer le fichier eng.traineddata par https://github.com/tesseract-ocr/tessdata/blob/main/eng.traineddata
 # le ficher ce trouve dans le même folder que tessdata (emplacement relatif à l'ordinateur)
 import imutils, cv2, os, requests, sys, env, photo, time, inspect
+from interactWithAlive import interactiveAlive
 import numpy as np
 import matplotlib.pyplot as plt
+import I2C_LCD_driver as LCD
 from IPython.display import display, clear_output
 from plaque import getPlateNumber  #quand vous faites 3.c enlever le commentaire
-from pymongo import MongoClient
 from gpiozero import Button, Buzzer
-from functionsMongo import command
 from datetime import date
 
-def iterationCode():
+def iterationCode(my_iot, projectId, lcd):
     try:
-        #Client et collection mangodb
-        client = MongoClient("mongodb+srv://gaspard:savoureux@cluster0.qnkai.mongodb.net/Stationnement?retryWrites=true&w=majority")
-        db = client.Stationnement
-        collection_employees = db.employees
-        collection_visites = db.visites
-
+        command = interactiveAlive(my_iot, projectId)
         #Compléter le code ici et appeler le classifieur Haarcascade
         photo.takePlaque()
         img = cv2.imread('plaque.jpg')
@@ -83,21 +78,19 @@ def iterationCode():
         cv2.imwrite('cropped.jpg', cropped)
         #Obtiens la matricule et interroge la bd pour vérifier l'existance de l'employé
         matricule = str(getPlateNumber(cropped)) 
-        employe = collection_employees.find_one({"immatriculation": matricule})
 
         #Renvoie la matricule, le nom complet et l'accès au stationnement d'un employé
-        msg ="\n matricule: {} \n employé: {} {} \n access: {}".format(matricule, employe['nom'], employe['prenom'], employe['stationnement'])
-
-        if employe:
-            print(msg)
-        else:
-            print('matricule n\'appartient pas a un employé')
+#        msg ="\n matricule: {} \n employé: {} {} \n access: {}".format(matricule, employe['nom'], employe['prenom'], employe['stationnement'])
+        info = command.stationnement(matricule)
+        lcd.lcd_display_string("{}".format(info['prenom']), 1)
+        lcd.lcd_display_string("{}".format(info['nom']), 2)
 
         command.visite(matricule)
 
         #Recyclage de l'iteration1 pour obtenir le nombre de visite de la journee
         today = date.today().strftime("%Y-%m-%d")
-        nbVisites = str(command.nbVisites("day", today))
+        #nbVisites = str(command.nbVisites("day", today))
+        nbVisites = str(command.nbVisites())
         #Permet d'obtenir les digits en string avec a chaque fois un nombre de 4 charactere
         digits = ""
         for digitZero in range(4 - len(nbVisites)):
@@ -107,5 +100,8 @@ def iterationCode():
             digits += str(nbVisites[digit])
 
         return digits
-    except:
-        return None
+    #except IndexError as e:
+        #raise e
+    except Exception as e:
+        pass
+        #print(e)
