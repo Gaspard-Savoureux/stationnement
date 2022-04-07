@@ -56,19 +56,17 @@ def main():
         while True:
             while stationnement == True:
 
-                sleep(1)
                 lcd = LCD.lcd()
                 visites = iterationCode(my_iot, lcd)
 
                 if visites == None:
-                    print(visites)
                     break
 
                 my_iot.update_doc({'/documents/visites/nombre': int(visites[2:])})
                 stationnement_lights_open(True)
                 motor.tourner()
-                sleep(6.1)
                 stationnement_lights_open(False)
+                sleep(6.1)
 
     except KeyboardInterrupt:
         print('interrupted!')
