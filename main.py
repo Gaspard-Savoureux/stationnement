@@ -12,9 +12,9 @@ sys.path.insert(0, currentdir)
 from Aliot.aliot import alive_iot as iot
 from mainCode import iterationCode
 
-projectId = 'e8a2df37-e54d-4175-b640-8bc2082d60c2'
-iot.ObjConnecteAlive.set_url("wss://alivecode.ca/iotgateway/")
-my_iot = iot.ObjConnecteAlive(object_id = "06ba2eda-60e5-48f7-8d4e-4da9efff35ac")
+#projectId = 'e8a2df37-e54d-4175-b640-8bc2082d60c2'
+iot.ObjConnecteAlive.set_url("ws://192.168.0.102:8881/")
+my_iot = iot.ObjConnecteAlive(object_id = "3e273ab3-38d8-4d0a-984e-589fd39e3a84")
 
 stationnement = False
 
@@ -39,34 +39,36 @@ stationnement_lights_open(False)
 def activateLight(value):
     global stationnement
     stationnement = True
-    my_iot.update(projectId, {'/documents/ouvert': True})
+    my_iot.update_doc({'/documents/ouvert': True})
 
 @my_iot.on_recv(action_id=20)
 def activateLight(value):
     global stationnement
     stationnement = False
-    my_iot.update(projectId, {'/documents/ouvert': False})
+    my_iot.update_doc({'/documents/ouvert': False})
 
 
 @my_iot.main_loop()
 def main():
     try:
         global stationnement
-        stationnement = my_iot.get_field(projectId, {'/document/ouvert'})
+        stationnement = my_iot.get_field('/document/ouvert')
         while True:
             while stationnement == True:
 
+                sleep(1)
                 lcd = LCD.lcd()
-                visites = iterationCode(my_iot, projectId, lcd)
+                visites = iterationCode(my_iot, lcd)
 
                 if visites == None:
+                    print(visites)
                     break
 
-                my_iot.update(projectId, {'/documents/visites/nombre': int(visites[2:])})
+                my_iot.update_doc({'/documents/visites/nombre': int(visites[2:])})
                 stationnement_lights_open(True)
                 motor.tourner()
+                sleep(6.1)
                 stationnement_lights_open(False)
-                sleep(0.5)
 
     except KeyboardInterrupt:
         print('interrupted!')

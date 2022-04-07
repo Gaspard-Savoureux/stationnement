@@ -12,9 +12,9 @@ from plaque import getPlateNumber  #quand vous faites 3.c enlever le commentaire
 from gpiozero import Button, Buzzer
 from datetime import date
 
-def iterationCode(my_iot, projectId, lcd):
+def iterationCode(my_iot, lcd):
     try:
-        command = interactiveAlive(my_iot, projectId)
+        command = interactiveAlive(my_iot)
         #Compléter le code ici et appeler le classifieur Haarcascade
         photo.takePlaque()
         img = cv2.imread('plaque.jpg')
@@ -89,8 +89,10 @@ def iterationCode(my_iot, projectId, lcd):
 
         #Recyclage de l'iteration1 pour obtenir le nombre de visite de la journee
         today = date.today().strftime("%Y-%m-%d")
+        
         #nbVisites = str(command.nbVisites("day", today))
         nbVisites = str(command.nbVisites())
+
         #Permet d'obtenir les digits en string avec a chaque fois un nombre de 4 charactere
         digits = ""
         for digitZero in range(4 - len(nbVisites)):
@@ -98,7 +100,6 @@ def iterationCode(my_iot, projectId, lcd):
 
         for digit in range(len(nbVisites)):
             digits += str(nbVisites[digit])
-
         return digits
     #except IndexError as e:
         #raise e

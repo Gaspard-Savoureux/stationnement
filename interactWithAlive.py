@@ -10,9 +10,8 @@ from datetime import datetime, timedelta
 import re
 
 class interactiveAlive:
-    def __init__(self, iotObject, projectId):
+    def __init__(self, iotObject):
         self.my_iot = iotObject
-        self.projectId = projectId
         
     #fonction pour créé ou mettre à jour un utilisateur
     def createUpdate(self):
@@ -21,9 +20,7 @@ class interactiveAlive:
         prenom = input('Entrez le prenom: ')
         nom = input('Entrez le nom: ')
 
-
-        stationnement = self.my_iot.get_doc(self.projectId)
-        employees = stationnement['employees']
+        employees = self.my_iot.get_field('/document/employees')
         existant = False
         currentEmploye = {}
         for i in employees:
@@ -52,7 +49,7 @@ class interactiveAlive:
                 "stationnement": stationnement,
                 "immatriculation": immatriculation})
 
-            self.my_iot.update(self.projectId, {'/documents/employees': employees})
+            self.my_iot.update_doc({'/documents/employees': employees})
             print('employé(e) créé avec succès !')
 
         elif ((action == 'U' or action == 'u') and existant):
@@ -96,7 +93,7 @@ class interactiveAlive:
                     employees.remove(i)
             employees.append(currentEmploye)
 
-            self.my_iot.update(self.projectId, {'/documents/employees': employees})
+            self.my_iot.update_doc({'/documents/employees': employees})
             print('employé(e) mis à jour avec succès !')
 
     #Fonction qui retourne les informations conçernant le stationnement d'un véhicule selon son immatriculation
@@ -104,11 +101,11 @@ class interactiveAlive:
         #matricule = input('Immatriculation: ')
 
         user = None
-        stationnement = self.my_iot.get_doc(self.projectId)
-        employees = stationnement['employees']
+        employees = self.my_iot.get_field('/document/employees')
 
+        print(employees)
+        print(employees)
         for i in employees:
-            print(i)
             if i['immatriculation'] == matricule:
                 user = i
 
@@ -134,14 +131,12 @@ class interactiveAlive:
         match = re.search(reg, immatricule)
         if match is None: return "matricule non conforme"
         now = datetime.now().strftime("%Y-%m-%d")
-        print(immatricule)
         myQuery1 = {"immatriculation": immatricule}
         myQuery2 = {"immatriculation": immatricule, "date": now}
 
-        stationnement = self.my_iot.get_doc(self.projectId)
-        employees = stationnement['employees']
-        visites = stationnement['visites']
-        actuallyPresent = stationnement['actuellementPresent']
+        employees = self.my_iot.get_field('/document/employees')
+        visites = self.my_iot.get_field('/document/visites')
+        actuallyPresent = self.my_iot.get_field('/document/actuellementPresent')
         
         employee_exist = None
         visite_exist = None
@@ -163,7 +158,7 @@ class interactiveAlive:
         if(condition1):
             #créer une première visite si un(e) employé(e) existe et que c'est ça première visite
             visites.append({ "date": now, "visites": 1, "immatriculation": immatricule})
-            self.my_iot.update(self.projectId, {'/documents/visites': visites})
+            self.my_iot.update_doc({'/documents/visites': visites})
         elif(condition2):
             #Si un(e) employé(e) existe et qu'il a déjà visité
             visite = visite_exist
@@ -179,11 +174,11 @@ class interactiveAlive:
                 visites.remove(visite)
                 visite['visites'] = visite['visites'] + 1
                 visites.append(visite)
-                self.my_iot.update(self.projectId, {'/documents/visites': visites})
+                self.my_iot.update_doc({'/documents/visites': visites})
             elif(visite["date"] != now):
                 #Si l'employé(e) visite le stationnement pour la première fois une nouvelle journée, crée une nouvelle entrez
                 visites.append({ "date": now, "visites": 1, "immatriculation": immatricule})
-                self.my_iot.update(self.projectId, {'/documents/visites': visites})
+                self.my_iot.update_doc({'/documents/visites': visites})
         return "l'employé(e) n'existe probablement pas"
 
     #Fonction qui retourne le nombre de visites selon le critère ciblé
@@ -196,7 +191,7 @@ class interactiveAlive:
         #TODO rendre ce qui suit potable
         # Soit que le nombre de visites soit reelement present et non pour la journee complete
         now = datetime.now().strftime("%Y-%m-%d")
-        dates = self.my_iot.get_field(self.projectId, '/document/visites')
+        dates = self.my_iot.get_field('/document/visites')
         nbVisites = 0
         
         for day in dates:
@@ -204,6 +199,6 @@ class interactiveAlive:
                 nbVisites += day['visites']
 
 
-        self.my_iot.update(self.projectId, {'/documents/nbActuellementPresent': nbVisites})
+        self.my_iot.update_doc({'/documents/nbActuellementPresent': nbVisites})
         print("Le nombre total de visite: ", nbVisites)
         return nbVisites
