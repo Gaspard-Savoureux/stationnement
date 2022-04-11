@@ -49,7 +49,7 @@ class interactiveAlive:
                 "stationnement": stationnement,
                 "immatriculation": immatriculation})
 
-            self.my_iot.update_doc({'/documents/employees': employees})
+            self.my_iot.update_doc({'/document/employees': employees})
             print('employé(e) créé avec succès !')
 
         elif ((action == 'U' or action == 'u') and existant):
@@ -93,7 +93,7 @@ class interactiveAlive:
                     employees.remove(i)
             employees.append(currentEmploye)
 
-            self.my_iot.update_doc({'/documents/employees': employees})
+            self.my_iot.update_doc({'/document/employees': employees})
             print('employé(e) mis à jour avec succès !')
 
     #Fonction qui retourne les informations conçernant le stationnement d'un véhicule selon son immatriculation
@@ -158,7 +158,7 @@ class interactiveAlive:
         if(condition1):
             #créer une première visite si un(e) employé(e) existe et que c'est ça première visite
             visites.append({ "date": now, "visites": 1, "immatriculation": immatricule})
-            self.my_iot.update_doc({'/documents/visites': visites})
+            self.my_iot.update_doc({'/document/visites': visites})
         elif(condition2):
             #Si un(e) employé(e) existe et qu'il a déjà visité
             visite = visite_exist
@@ -174,11 +174,11 @@ class interactiveAlive:
                 visites.remove(visite)
                 visite['visites'] = visite['visites'] + 1
                 visites.append(visite)
-                self.my_iot.update_doc({'/documents/visites': visites})
+                self.my_iot.update_doc({'/document/visites': visites})
             elif(visite["date"] != now):
                 #Si l'employé(e) visite le stationnement pour la première fois une nouvelle journée, crée une nouvelle entrez
                 visites.append({ "date": now, "visites": 1, "immatriculation": immatricule})
-                self.my_iot.update_doc({'/documents/visites': visites})
+                self.my_iot.update_doc({'/document/visites': visites})
         return "l'employé(e) n'existe probablement pas"
 
     #Fonction qui retourne le nombre de visites selon le critère ciblé
@@ -199,6 +199,6 @@ class interactiveAlive:
                 nbVisites += day['visites']
 
 
-        self.my_iot.update_doc({'/documents/nbActuellementPresent': nbVisites})
+        self.my_iot.update_doc({'/document/nbActuellementPresent': nbVisites})
         print("Le nombre total de visite: ", nbVisites)
         return nbVisites

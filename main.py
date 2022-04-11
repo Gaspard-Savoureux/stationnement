@@ -10,10 +10,12 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 sys.path.insert(0, currentdir)
 
 from Aliot.aliot import alive_iot as iot
-from mainCode import iterationCode
+from scan import scan
 
 #projectId = 'e8a2df37-e54d-4175-b640-8bc2082d60c2'
-iot.ObjConnecteAlive.set_url("ws://192.168.0.102:8881/")
+iot.ObjConnecteAlive.set_url("wss://albumfamilial.ca/iotgateway/")
+iot.ObjConnecteAlive.set_api_url("https://albumfamilial.ca/api")
+#iot.ObjConnecteAlive.set_url("ws://192.168.0.102:8881/")
 my_iot = iot.ObjConnecteAlive(object_id = "3e273ab3-38d8-4d0a-984e-589fd39e3a84")
 
 stationnement = False
@@ -39,13 +41,13 @@ stationnement_lights_open(False)
 def activateLight(value):
     global stationnement
     stationnement = True
-    my_iot.update_doc({'/documents/ouvert': True})
+    my_iot.update_doc({'/document/ouvert': True})
 
 @my_iot.on_recv(action_id=20)
 def activateLight(value):
     global stationnement
     stationnement = False
-    my_iot.update_doc({'/documents/ouvert': False})
+    my_iot.update_doc({'/document/ouvert': False})
 
 
 @my_iot.main_loop()
@@ -57,16 +59,21 @@ def main():
             while stationnement == True:
 
                 lcd = LCD.lcd()
-                visites = iterationCode(my_iot, lcd)
+                visites = scan(my_iot, lcd)
 
                 if visites == None:
                     break
 
-                my_iot.update_doc({'/documents/visites/nombre': int(visites[2:])})
+                my_iot.update_doc({'/document/visites/nombre': int(visites[2:])})
                 stationnement_lights_open(True)
-                motor.tourner()
+                motor.open()
+                my_iot.update_doc({'/document/stationnement/ouvert': True})
+                sleep(5)
+                my_iot.update_doc({'/document/stationnement/ouvert': False})
+                motor.close()
+                sleep(1)
                 stationnement_lights_open(False)
-                sleep(6.1)
+                sleep(2)
 
     except KeyboardInterrupt:
         print('interrupted!')

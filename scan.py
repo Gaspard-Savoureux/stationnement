@@ -12,13 +12,14 @@ from plaque import getPlateNumber  #quand vous faites 3.c enlever le commentaire
 from gpiozero import Button, Buzzer
 from datetime import date
 
-def iterationCode(my_iot, lcd):
+def scan(my_iot, lcd):
     try:
         command = interactiveAlive(my_iot)
         #Compléter le code ici et appeler le classifieur Haarcascade
         photo.takePlaque()
         img = cv2.imread('plaque.jpg')
         #img = cv2.imread('car5.jpg')
+        #TODO add qc plaque
         kernel = cv2.CascadeClassifier('../Data/plaque_russe_haarcascade.xml')
 
         # Edge detection
